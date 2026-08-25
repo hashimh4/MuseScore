@@ -345,6 +345,27 @@ TEST_F(MidiRenderer_Tests, ghostNote)
     checkEventInterval(events, 480, 959, 57, ghostVol);
 }
 
+TEST_F(MidiRenderer_Tests, compoundArticulations)
+{
+    constexpr int defVol = 80; // mf
+
+    // symId2ArticulationName() maps the accent-based compound symbols to "sforzato..." names,
+    // so these are the velocities of the accent and marcato they are drawn with.
+    constexpr int accentVol = defVol * 1.2;
+    constexpr int marcatoVol = defVol * 1.44;
+
+    EventsHolder events = renderMidiEvents(u"compound_articulations.mscx");
+
+    EXPECT_EQ(events.size(), 1);
+    EXPECT_EQ(events[DEFAULT_CHANNEL].size(), 10);
+
+    checkEventInterval(events, 0, 479, 60, defVol); // no articulation
+    checkEventInterval(events, 480, 719, 62, accentVol); // accent-staccato, 50% gate time
+    checkEventInterval(events, 960, 1199, 64, marcatoVol); // marcato-staccato, 50% gate time
+    checkEventInterval(events, 1440, 1919, 65, accentVol); // tenuto-accent, full gate time
+    checkEventInterval(events, 1920, 2399, 67, marcatoVol); // marcato-tenuto, full gate time
+}
+
 TEST_F(MidiRenderer_Tests, simpleTremolo)
 {
     constexpr int defVol = 96; // f
